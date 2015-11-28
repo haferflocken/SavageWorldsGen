@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{246e20e8-7408-4071-a38f-20509c0d9918}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="savage">
+      <UniqueIdentifier>{8b943d2d-5616-4c35-9c87-f8997a0b7527}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="savage\managers">
+      <UniqueIdentifier>{e75897a9-2f03-4ad8-a697-aa945467b208}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\managers">
+      <UniqueIdentifier>{3a294312-ca76-489f-a107-97b23b7a3513}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="savage\edge.hpp">
+      <Filter>savage</Filter>
+    </ClInclude>
+    <ClInclude Include="savage\person.hpp">
+      <Filter>savage</Filter>
+    </ClInclude>
+    <ClInclude Include="savage\rank_e.hpp">
+      <Filter>savage</Filter>
+    </ClInclude>
+    <ClInclude Include="savage\dice_e.hpp">
+      <Filter>savage</Filter>
+    </ClInclude>
+    <ClInclude Include="savage\skills_bag.hpp">
+      <Filter>savage</Filter>
+    </ClInclude>
+    <ClInclude Include="savage\hindrance.hpp">
+      <Filter>savage</Filter>
+    </ClInclude>
+    <ClInclude Include="savage\managers\skills_manager.hpp">
+      <Filter>savage\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="savage\managers\hindrance_manager.hpp">
+      <Filter>savage\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="savage\attributes_bag.hpp">
+      <Filter>savage</Filter>
+    </ClInclude>
+    <ClInclude Include="savage\managers\edge_manager.hpp">
+      <Filter>savage\managers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\savage_worlds_gen.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\managers\skills_manager.cpp">
+      <Filter>src\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="savage\managers\hindrance_manager.cpp">
+      <Filter>src\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\managers\edge_manager.cpp">
+      <Filter>src\managers</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
