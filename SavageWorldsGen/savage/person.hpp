@@ -23,7 +23,7 @@ struct person {
   std::vector<edge> edges;
   std::vector<std::string> replacedEdges;
   std::vector<hindrance> hindrances;
-  
+
   enum class raised_attribute_flags_e : uint8_t {
     none = 0,
     raised_as_novice = 1,

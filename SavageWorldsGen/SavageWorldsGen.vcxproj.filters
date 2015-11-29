@@ -45,6 +45,9 @@
     <ClInclude Include="savage\managers\edge_manager.hpp">
       <Filter>savage\managers</Filter>
     </ClInclude>
+    <ClInclude Include="savage\modifier_bag.hpp">
+      <Filter>savage</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\savage_worlds_gen.cpp">
@@ -58,6 +61,9 @@
     </ClCompile>
     <ClCompile Include="src\managers\edge_manager.cpp">
       <Filter>src\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modifier_bag.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

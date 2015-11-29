@@ -71,6 +71,7 @@
     <ClInclude Include="savage\attributes_bag.hpp" />
     <ClInclude Include="savage\dice_e.hpp" />
     <ClInclude Include="savage\edge.hpp" />
+    <ClInclude Include="savage\modifier_bag.hpp" />
     <ClInclude Include="savage\person.hpp" />
     <ClInclude Include="savage\rank_e.hpp" />
     <ClInclude Include="savage\skills_bag.hpp" />
@@ -79,6 +80,7 @@
     <ClCompile Include="savage\managers\hindrance_manager.cpp" />
     <ClCompile Include="src\managers\edge_manager.cpp" />
     <ClCompile Include="src\managers\skills_manager.cpp" />
+    <ClCompile Include="src\modifier_bag.cpp" />
     <ClCompile Include="src\savage_worlds_gen.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

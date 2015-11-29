@@ -28,6 +28,15 @@ class skills_manager {
 public:
   static const std::vector<skill_definition>& get_skill_definitions();
   
+  static bool is_skill( const std::string& s ) {
+    for( const skill_definition& sd : get_skill_definitions() ) {
+      if( sd.name == s ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static void set_skill_definitions( const std::vector<skill_definition>& skillDefinitions ) {
     *s_skillDefinitions = skillDefinitions;
   }
