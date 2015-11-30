@@ -120,7 +120,7 @@ int main( int argCount, char** args ) {
   std::cout << generatedPerson.skills << std::endl;
   std::cout << "--------------------------------------------------------------------------------" << std::endl;
   for( const savage::hindrance& h : generatedPerson.hindrances ) {
-    std::cout << h.name << ": " << h.effects << std::endl;
+    std::cout << h << std::endl;
   }
   std::cout << "--------------------------------------------------------------------------------" << std::endl;
   for( const savage::edge& e : generatedPerson.edges ) {

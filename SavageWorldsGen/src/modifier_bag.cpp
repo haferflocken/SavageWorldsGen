@@ -12,6 +12,8 @@ const std::string concrete_modifier_syntax[] = {
   "Vigour",
   "AttributePoints",
   "SkillPoints",
+  "SmartsSkillPoints",
+  "EdgePoints", 
   "Toughness",
   "Parry",
   "Pace",
@@ -22,12 +24,12 @@ const std::string concrete_modifier_syntax[] = {
   "Bennies"
 };
 
-const std::size_t num_concrete_modifiers = 15;
+const std::size_t num_concrete_modifiers = 17;
 
-std::ostream& ::savage::operator<<( std::ostream& o, modifier_target t ) {
-  if( t < modifier_target::skill ) {
+std::ostream& ::savage::operator<<( std::ostream& o, modifier_target_e t ) {
+  if( t < modifier_target_e::skill ) {
     o << concrete_modifier_syntax[static_cast<std::size_t>( t )];
-  } else if ( t != modifier_target::skill ) {
+  } else if ( t != modifier_target_e::skill ) {
     o << "INVALID MODIFIER TARGET";
   }
   return o;
@@ -78,19 +80,19 @@ bool parse_modifier( const std::string& modifierText, modifier& outModifier ) {
   }
   const std::string rawTarget = modifierText.substr( firstCharOfTarget, lastCharOfTarget - firstCharOfTarget + 1 );
 
-  modifier_target target = modifier_target::invalid;
+  modifier_target_e target = modifier_target_e::invalid;
   for( std::size_t i = 0, iEnd = num_concrete_modifiers; i < iEnd; ++i ) {
     if( rawTarget == concrete_modifier_syntax[i] ) {
-      target = static_cast<modifier_target>( i );
+      target = static_cast<modifier_target_e>( i );
       break;
     }
   }
 
   // If none of the built-in targets apply, see if it is a skill.
   std::string subTarget = "";
-  if( target == modifier_target::invalid ) {
+  if( target == modifier_target_e::invalid ) {
     if( skills_manager::is_skill( rawTarget ) ) {
-      target = modifier_target::skill;
+      target = modifier_target_e::skill;
       subTarget = rawTarget;
     } else {
       // If the target is not a skill or a built-in target, we cannot parse the modifier.
@@ -99,51 +101,100 @@ bool parse_modifier( const std::string& modifierText, modifier& outModifier ) {
   }
 
   // Parse the action of the modifier. This is either +, -, or =.
-  modifier_action action;
+  modifier_action_e action;
   switch( modifierText[actionChar] ) {
   case '+':
-    action = modifier_action::add;
+    action = modifier_action_e::add;
     break;
   case '-':
-    action = modifier_action::subtract;
+    action = modifier_action_e::subtract;
     break;
   case '=':
-    action = modifier_action::set;
+    action = modifier_action_e::set;
     break;
   default:
     return false;
   }
 
-  // Parse the operand of the modifier. This is a decimal integer.
-  const std::size_t firstCharOfOperand = next_non_whitespace_index( modifierText, actionChar + 1 );
+  // Parse the operand of the modifier. This is a decimal integer, a die, or a decimal integer followed by "dt".
+  std::size_t firstCharOfOperand = next_non_whitespace_index( modifierText, actionChar + 1 );
   if( firstCharOfOperand == std::string::npos ) {
     return false;
   }
-  const std::size_t lastCharOfOperand = previous_non_whitespace_index( modifierText, modifierText.length() - 1 );
+  std::size_t lastCharOfOperand = previous_non_whitespace_index( modifierText, modifierText.length() - 1 );
   const bool negativeOperand = modifierText[firstCharOfOperand] == '-';
-  if( negativeOperand && action != modifier_action::set ) {
+  if( negativeOperand && action != modifier_action_e::set ) {
     // Negative operands are only allowed for set actions.
     return false;
   }
+  if( negativeOperand ) {
+    firstCharOfOperand += 1;
+  }
 
+  // Extract the unit of the operand.
+  modifier_unit_e operandUnit;
+  if( modifierText[firstCharOfOperand] == 'd' ) {
+    operandUnit = modifier_unit_e::die;
+    ++firstCharOfOperand;
+  } else if( modifierText[lastCharOfOperand - 1] == 'd' && modifierText[lastCharOfOperand] == 't' ) {
+    operandUnit = modifier_unit_e::die_type;
+    lastCharOfOperand -= 2;
+  } else {
+    operandUnit = modifier_unit_e::number;
+  }
+
+  // Parse the numeric part of the operand.
   int32_t operand = 0;
-  for( std::size_t i = negativeOperand ? firstCharOfOperand + 1 : firstCharOfOperand;
-    i <= lastCharOfOperand; ++i ) {
-    if( modifierText[i] < '0' || modifierText[i] > '9' ) {
+  switch( operandUnit ) {
+  case modifier_unit_e::die: {
+    if( negativeOperand ) {
       return false;
     }
-    int32_t val = modifierText[i] - '0';
-    operand *= 10;
-    operand += val;
+
+    const std::string dieOperandText = modifierText.substr( firstCharOfOperand, lastCharOfOperand - firstCharOfOperand + 1 );
+    if( dieOperandText == "4" ) {
+      operand = static_cast<int32_t>( dice_e::d4 );
+    } else if( dieOperandText == "6" ) {
+      operand = static_cast<int32_t>( dice_e::d6 );
+    } else if( dieOperandText == "8" ) {
+      operand = static_cast<int32_t>( dice_e::d8 );
+    } else if( dieOperandText == "10" ) {
+      operand = static_cast<int32_t>( dice_e::d10 );
+    } else if( dieOperandText == "12" ) {
+      operand = static_cast<int32_t>( dice_e::d12 );
+    } else if( dieOperandText == "12+1" ) {
+      operand = static_cast<int32_t>( dice_e::d12_plus_1 );
+    } else if( dieOperandText == "12+2" ) {
+      operand = static_cast<int32_t>( dice_e::d12_plus_2 );
+    } else {
+      return false;
+    }
+    break;
   }
-  if( negativeOperand ) {
-    operand *= -1;
+  case modifier_unit_e::die_type:
+  case modifier_unit_e::number: {
+    for( std::size_t i = firstCharOfOperand; i <= lastCharOfOperand; ++i ) {
+      if( modifierText[i] < '0' || modifierText[i] > '9' ) {
+        return false;
+      }
+      int32_t val = modifierText[i] - '0';
+      operand *= 10;
+      operand += val;
+    }
+    if( negativeOperand ) {
+      operand *= -1;
+    }
+    break;
+  }
+  default:
+    throw std::runtime_error( "INVALID CODE BRANCH REACHED." );
   }
 
   // Place the parsed values in the output parameter.
   outModifier.target = target;
   outModifier.subTarget = subTarget;
   outModifier.action = action;
+  outModifier.operandUnit = operandUnit;
   outModifier.operand = operand;
   return true;
 }
