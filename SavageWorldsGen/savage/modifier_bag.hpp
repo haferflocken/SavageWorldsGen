@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dice_e.hpp"
+
 #include <ostream>
 #include <stdint.h>
 #include <string>
@@ -58,6 +60,7 @@ inline std::ostream& operator<<( std::ostream& o, modifier_action_e a ) {
   return o;
 }
 
+// The unit of the operand of a modifier.
 enum class modifier_unit_e : uint8_t {
   number = 0,
   die,
@@ -65,6 +68,9 @@ enum class modifier_unit_e : uint8_t {
   count,
   invalid = count
 };
+
+// Checks if a unit u is a valid unit for the operand of an action a on a target t.
+bool modifier_unit_matches_target( modifier_target_e t, modifier_action_e a, modifier_unit_e u );
 
 struct modifier {
   modifier_target_e target;
@@ -88,7 +94,7 @@ inline std::ostream& operator<<( std::ostream& o, const modifier& m ) {
     o << m.operand;
     break;
   case modifier_unit_e::die:
-    o << 'd' << m.operand;
+    o << static_cast<dice_e>( m.operand );
     break;
   case modifier_unit_e::die_type:
     o << m.operand << "dt";

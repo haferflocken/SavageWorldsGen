@@ -21,6 +21,8 @@ public:
   static const hindrance& random_major_hindrance();
   static const hindrance& random_minor_hindrance();
 
+  static const hindrance* find_hindrance( const std::string& name );
+
   static void read_hindrances( const std::string& filePath );
 };
 } // namespace savage

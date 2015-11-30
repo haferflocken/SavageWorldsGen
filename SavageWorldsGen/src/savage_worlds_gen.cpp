@@ -60,7 +60,7 @@ int main( int argCount, char** args ) {
   const std::vector<std::vector<std::string>> parsedArgGroups = parse_main_arguments( argCount, args );
 
   std::string nameArg = "Unnamed Character";
-  std::size_t levelArg = 80;
+  std::size_t levelArg = 1;
 
   // Gather the information from the arguments.
   for( const std::vector<std::string>& argGroup : parsedArgGroups ) {
@@ -124,7 +124,7 @@ int main( int argCount, char** args ) {
   }
   std::cout << "--------------------------------------------------------------------------------" << std::endl;
   for( const savage::edge& e : generatedPerson.edges ) {
-    std::cout << e.name << ": " << e.effects << std::endl;
+    std::cout << e << std::endl;
   }
 
   std::cout << std::endl;
@@ -134,9 +134,33 @@ int main( int argCount, char** args ) {
   return 0;
 }
 
-void random_initialize( savage::person& p ) {
+namespace {
+// Assumes target is a number.
+void apply_hindrances_modifier( const std::vector<savage::hindrance>& hindrances, savage::modifier_target_e target, std::size_t& val ) {
   using namespace savage;
 
+  for( const hindrance& h : hindrances ) {
+    const modifier* m = h.modifiers.get_modifier( target );
+    if( m != nullptr ) {
+      switch( m->action ) {
+      case modifier_action_e::set:
+        val = m->operand;
+        break;
+      case modifier_action_e::add:
+        val += m->operand;
+        break;
+      case modifier_action_e::subtract:
+        val -= m->operand;
+        break;
+      }
+    }
+  }
+}
+} // namespace anonymous
+
+void random_initialize( savage::person& p ) {
+  using namespace savage;
+  
   // Randomize hindrances. A person can have two minor and a major at most.
   // A major hindrance grants 2 hindrance points, and a minor hindrance grants 1.
   bool hasMajorHindrance = ( rand() % 2 ) == 1;
@@ -161,8 +185,11 @@ void random_initialize( savage::person& p ) {
     }
   }
 
-  // Randomize attributes with random chance to spend hindrance points.
+  // Determine the number of points we have to spend on attributes.
   std::size_t attributePoints = 5;
+  // Attribute points can be affected by hindrances.
+  apply_hindrances_modifier( p.hindrances, modifier_target_e::attriibute_points, attributePoints );
+  // Randomly spend hindrance points on attributes.
   while( hindrancePoints >= 2 ) {
     if( ( rand() % 2 ) == 1 ) {
       hindrancePoints -= 2;
@@ -171,6 +198,7 @@ void random_initialize( savage::person& p ) {
       break;
     }
   }
+  // Spend attribute points randomly.
   while( attributePoints > 0 ) {
     // Treat the attributes bag as an array of dice to make it easy to work with.
     dice_e* attributeArray = p.attributes.as_array();
@@ -183,9 +211,39 @@ void random_initialize( savage::person& p ) {
     attributeArray[attributeIndex] = attributeArray[attributeIndex] + 1;
     --attributePoints;
   }
+  // Hindrances can modify the die types of attributes.
+  for( const hindrance& h : p.hindrances ) {
+    for( std::size_t i = static_cast<std::size_t>( modifier_target_e::attr_agility ),
+         iLast = static_cast<std::size_t>( modifier_target_e::attr_vigour ); i <= iLast; ++i ) {
+      const modifier* m = h.modifiers.get_modifier( static_cast<modifier_target_e>( i ) );
+      if( m != nullptr ) {
+        if( m->operandUnit == modifier_unit_e::die_type ) {
+          dice_e& die = p.attributes.as_array()[i - static_cast<std::size_t>( modifier_target_e::attr_agility )];
+          // Add or subtract the operand, because the type-checker in the modifier parser has verified that is the action.
+          switch( m->action ) {
+          case modifier_action_e::add:
+            if( die < dice_e::d12 ) {
+              die = die + m->operand;
+            }
+            break;
+          case modifier_action_e::subtract:
+            if( die > dice_e::d4 ) {
+              die = die - m->operand;
+            }
+            break;
+          }
+        }
+      }
+    }
+}
 
-  // Randomize skills with random chance to spend hindrance points.
+  // Determine the number of points we have to spend on skills.
   std::size_t skillPoints = 15;
+  std::size_t smartsSkillPoints = 0;
+  // Hindrances can affect skill points.
+  apply_hindrances_modifier( p.hindrances, modifier_target_e::skill_points, skillPoints );
+  apply_hindrances_modifier( p.hindrances, modifier_target_e::smarts_skill_points, smartsSkillPoints );
+  // Randomly spend hindrance points on skill points.
   while( hindrancePoints >= 1 ) {
     if( ( rand() % 2 ) == 1 ) {
       --hindrancePoints;
@@ -199,9 +257,29 @@ void random_initialize( savage::person& p ) {
     --hindrancePoints;
     ++skillPoints;
   }
+  // Spend skill points specific to smarts randomly on smarts skills.
+  while( smartsSkillPoints > 0 ) {
+    // Find a smarts skill that can be increased.
+    std::vector<skill*> smartsSkillsBelowD12 = only_skills_below(
+      only_skills_of_attribute( p.skills.as_vector(), attributes_e::smarts ), dice_e::d12 );
+
+    skill* s;
+    if( smartsSkillPoints >= 2 ) {
+      s = smartsSkillsBelowD12[rand() % smartsSkillsBelowD12.size()];
+    } else {
+      std::vector<skill*> skillsBelowSmarts = only_skills_below( smartsSkillsBelowD12, p.attributes.get( attributes_e::smarts ) );
+      s = skillsBelowSmarts[rand() % skillsBelowSmarts.size()];
+    }
+    const std::size_t costToIncrease = ( s->die >= p.attributes.get( attributes_e::smarts ) ) ? 2 : 1;
+
+    // Increase the skill by one die type.
+    s->die = s->die + 1;
+    smartsSkillPoints -= costToIncrease;
+  }
+  // Spend skill points randomly.
   while( skillPoints > 0 ) {
     // Find a skill that can be increased.
-    std::vector<skill*> skillsBelowD12 = p.skills.get_skills_below( dice_e::d12 );
+    std::vector<skill*> skillsBelowD12 = only_skills_below( p.skills.as_vector(), dice_e::d12 );
     
     skill* s;
     if( skillPoints >= 2 ) {
@@ -290,7 +368,7 @@ void random_level_up( savage::person& p, std::size_t targetLevel ) {
     if( e != nullptr ) {
       availableTasks.push_back( 0 );
     }
-    std::vector<skill*> skillsBelowD12 = p.skills.get_skills_below( dice_e::d12 );
+    std::vector<skill*> skillsBelowD12 = only_skills_below( p.skills.as_vector(), dice_e::d12 );
     if( !skillsBelowD12.empty() ) {
       availableTasks.push_back( 1 );
     }

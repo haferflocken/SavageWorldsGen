@@ -25,6 +25,11 @@ inline dice_e operator+( dice_e lhs, T rhs ) {
   return static_cast<dice_e>( static_cast<T>( lhs ) + rhs );
 }
 
+template<typename T>
+inline dice_e operator-( dice_e lhs, T rhs ) {
+  return static_cast<dice_e>( static_cast<T>( lhs ) - rhs );
+}
+
 inline std::ostream& operator<<( std::ostream& o, dice_e d ) {
   switch( d ) {
   case dice_e::none:

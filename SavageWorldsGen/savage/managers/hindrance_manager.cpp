@@ -104,6 +104,15 @@ const hindrance& hindrance_manager::random_minor_hindrance() {
   return get_minor_hindrances()[i];
 }
 
+const hindrance* hindrance_manager::find_hindrance( const std::string& name ) {
+  for( const hindrance& h : get_hindrances() ) {
+    if( h.name == name ) {
+      return &h;
+    }
+  }
+  return nullptr;
+}
+
 void hindrance_manager::read_hindrances( const std::string& filePath ) {
   if( s_hindrances != nullptr ) {
     delete s_hindrances;

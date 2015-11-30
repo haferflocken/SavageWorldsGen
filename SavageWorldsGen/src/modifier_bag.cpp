@@ -4,6 +4,7 @@
 
 using namespace savage;
 
+namespace {
 const std::string concrete_modifier_syntax[] = {
   "Agility",
   "Smarts",
@@ -13,7 +14,7 @@ const std::string concrete_modifier_syntax[] = {
   "AttributePoints",
   "SkillPoints",
   "SmartsSkillPoints",
-  "EdgePoints", 
+  "EdgePoints",
   "Toughness",
   "Parry",
   "Pace",
@@ -23,8 +24,30 @@ const std::string concrete_modifier_syntax[] = {
   "FearChecks",
   "Bennies"
 };
-
 const std::size_t num_concrete_modifiers = 17;
+
+// The unit of the modifier target. Determines the sort of modifiers that can be applied.
+const modifier_unit_e modifier_target_units[] = {
+  modifier_unit_e::die, // Agility
+  modifier_unit_e::die, // Smarts
+  modifier_unit_e::die, // Spirit
+  modifier_unit_e::die, // Strength
+  modifier_unit_e::die, // Vigour
+  modifier_unit_e::number, // AttributePoints
+  modifier_unit_e::number, // SkillPoints
+  modifier_unit_e::number, // SmartsSkillPoints
+  modifier_unit_e::number, // EdgePoints
+  modifier_unit_e::number, // Toughness
+  modifier_unit_e::number, // Parry
+  modifier_unit_e::number, // Pace
+  modifier_unit_e::die, // Run
+  modifier_unit_e::number, // Charisma
+  modifier_unit_e::number, // FatigueChecks
+  modifier_unit_e::number, // FearChecks
+  modifier_unit_e::number, // Bennies
+  modifier_unit_e::die // Skill
+};
+} // anonymous namespace
 
 std::ostream& ::savage::operator<<( std::ostream& o, modifier_target_e t ) {
   if( t < modifier_target_e::skill ) {
@@ -33,6 +56,31 @@ std::ostream& ::savage::operator<<( std::ostream& o, modifier_target_e t ) {
     o << "INVALID MODIFIER TARGET";
   }
   return o;
+}
+
+bool ::savage::modifier_unit_matches_target( modifier_target_e t, modifier_action_e a, modifier_unit_e u ) {
+  modifier_unit_e targetUnit = modifier_target_units[static_cast<std::size_t>( t )];
+  switch( targetUnit ) {
+  case modifier_unit_e::die: {
+    switch( a ) {
+    case modifier_action_e::add:
+    case modifier_action_e::subtract:
+      return ( u == modifier_unit_e::die_type ) || ( u == modifier_unit_e::number );
+
+    case modifier_action_e::set:
+      return u == modifier_unit_e::die;
+
+    default:
+      return false;
+    }
+    break;
+  }
+  case modifier_unit_e::number:
+    return u == modifier_unit_e::number;
+
+  default:
+    return false;
+  }
 }
 
 namespace {

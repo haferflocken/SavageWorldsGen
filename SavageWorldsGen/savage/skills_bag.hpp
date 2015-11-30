@@ -64,16 +64,6 @@ public:
     }
   }
 
-  std::vector<skill*> get_skills_below( dice_e threshold ) {
-    std::vector<skill*> result;
-    for( skill& s : skills ) {
-      if( s.die < threshold ) {
-        result.push_back( &s );
-      }
-    }
-    return result;
-  }
-
   skills_bag operator+( const skills_bag& rhs ) const {
     skills_bag result;
     for( std::size_t i = 0, iEnd = skills.size(); i < iEnd; ++i ) {
@@ -109,5 +99,45 @@ inline std::ostream& operator<<( std::ostream& o, const skills_bag& bag ) {
     o << std::endl << i->def.name << ": " << i->die;
   }
   return o;
+}
+
+inline std::vector<skill*> only_skills_below( const std::vector<skill*>& skills, dice_e threshold ) {
+  std::vector<skill*> result;
+  for( skill* s : skills ) {
+    if( s->die < threshold ) {
+      result.push_back( s );
+    }
+  }
+  return result;
+}
+
+inline std::vector<skill*> only_skills_below( std::vector<skill>& skills, dice_e threshold ) {
+  std::vector<skill*> result;
+  for( skill& s : skills ) {
+    if( s.die < threshold ) {
+      result.push_back( &s );
+    }
+  }
+  return result;
+}
+
+inline std::vector<skill*> only_skills_of_attribute( const std::vector<skill*>& skills, attributes_e attribute ) {
+  std::vector<skill*> result;
+  for( skill* s : skills ) {
+    if( s->def.attribute == attribute ) {
+      result.push_back( s );
+    }
+  }
+  return result;
+}
+
+inline std::vector<skill*> only_skills_of_attribute( std::vector<skill>& skills, attributes_e attribute ) {
+  std::vector<skill*> result;
+  for( skill& s : skills ) {
+    if( s.def.attribute == attribute ) {
+      result.push_back( &s );
+    }
+  }
+  return result;
 }
 } // namespace savage
