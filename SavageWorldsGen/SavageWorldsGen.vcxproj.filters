@@ -48,6 +48,9 @@
     <ClInclude Include="savage\modifier_bag.hpp">
       <Filter>savage</Filter>
     </ClInclude>
+    <ClInclude Include="savage\savage_exception.hpp">
+      <Filter>savage</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\savage_worlds_gen.cpp">
@@ -63,6 +66,9 @@
       <Filter>src\managers</Filter>
     </ClCompile>
     <ClCompile Include="src\modifier_bag.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\person.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

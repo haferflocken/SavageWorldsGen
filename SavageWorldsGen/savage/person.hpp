@@ -5,6 +5,7 @@
 #include "skills_bag.hpp"
 #include "edge.hpp"
 #include "hindrance.hpp"
+#include "savage_exception.hpp"
 
 #include <stdint.h>
 #include <string>
@@ -20,10 +21,24 @@ struct person {
   uint32_t experience;
   attributes_bag attributes;
   skills_bag skills;
-  std::vector<edge> edges;
-  std::vector<std::string> replacedEdges;
-  std::vector<hindrance> hindrances;
 
+private:
+  std::vector<edge> m_edges;
+  std::vector<std::string> m_replacedEdges;
+  std::vector<hindrance> m_hindrances;
+
+  // Derived statistics.
+  int8_t m_toughness;
+  int8_t m_parryModifier;
+  int8_t m_dodge;
+  int8_t m_pace;
+  dice_e m_runDie;
+  int8_t m_charisma;
+  int8_t m_fatigueChecks;
+  int8_t m_fearChecks;
+  int8_t m_bennies;
+
+public:
   enum class raised_attribute_flags_e : uint8_t {
     none = 0,
     raised_as_novice = 1,
@@ -39,9 +54,15 @@ struct person {
     , experience( 0 )
     , attributes()
     , skills()
-    , edges()
-    , replacedEdges()
-    , hindrances()
+    , m_edges()
+    , m_replacedEdges()
+    , m_hindrances()
+    , m_pace( 6 )
+    , m_runDie( dice_e::d6 )
+    , m_parryModifier( 0 )
+    , m_dodge( 0 )
+    , m_charisma( 0 )
+    , m_bennies( 3 )
     , raisedAttributeFlags( raised_attribute_flags_e::none ) {}
 
   uint32_t level() const { return 1 + ( experience / 5 ); }
@@ -60,8 +81,16 @@ struct person {
     }
   }
 
+  uint8_t parry() const {
+    const dice_e fightingSkill = skills.find_die( "Fighting" );
+    return ( as_numeric( fightingSkill ) / 2 ) + m_parryModifier;
+  }
+
+  const std::vector<edge>& get_edges() const { return m_edges; }
+  const std::vector<hindrance>& get_hindrances() const { return m_hindrances; }
+
   const edge* find_edge( const std::string& edgeName ) const {
-    for( const edge& e : edges ) {
+    for( const edge& e : m_edges ) {
       if( e.name == edgeName ) {
         return &e;
       }
@@ -70,7 +99,7 @@ struct person {
   }
 
   const std::string* find_replaced_edge( const std::string& edgeName ) const {
-    for( const std::string& s : replacedEdges ) {
+    for( const std::string& s : m_replacedEdges ) {
       if( s == edgeName ) {
         return &s;
       }
@@ -115,6 +144,23 @@ struct person {
     // Return false when we meet no requirements.
     return false;
   }
+
+  /**
+   * Add an edge to the edge list and apply its modifiers.
+   */
+  void add_edge( const edge& e );
+
+  /**
+   * Add a hindrance to the hindrance list and apply its modifiers.
+   */
+  void add_hindrance( const hindrance& h );
+
+private:
+  // Apply a modifier to this person.
+  void apply_modifier( const modifier& m );
+
+  // Remove the effects of a modifier from this person.
+  void unapply_modifier( const modifier& m );
 };
 
 inline person::raised_attribute_flags_e operator|( person::raised_attribute_flags_e lhs, person::raised_attribute_flags_e rhs ) {

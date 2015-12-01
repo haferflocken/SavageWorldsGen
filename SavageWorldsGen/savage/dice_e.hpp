@@ -1,5 +1,7 @@
 #pragma once
 
+#include "savage_exception.hpp"
+
 #include <stdint.h>
 #include <ostream>
 
@@ -19,6 +21,28 @@ enum class dice_e : uint8_t {
   count,
   invalid = count
 };
+
+inline uint8_t as_numeric( dice_e d ) {
+  switch( d ) {
+  case dice_e::none:
+    return 0;
+  case dice_e::d4:
+    return 4;
+  case dice_e::d6:
+    return 6;
+  case dice_e::d8:
+    return 8;
+  case dice_e::d10:
+    return 10;
+  case dice_e::d12:
+    return 12;
+  case dice_e::d12_plus_1:
+    return 13;
+  case dice_e::d12_plus_2:
+    return 14;
+  }
+  throw savage_error( "INVALID DIE TYPE IN AS_NUMERIC." );
+}
 
 template<typename T>
 inline dice_e operator+( dice_e lhs, T rhs ) {

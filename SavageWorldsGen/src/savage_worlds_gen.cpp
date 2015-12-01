@@ -119,11 +119,11 @@ int main( int argCount, char** args ) {
   std::cout << "--------------------------------------------------------------------------------" << std::endl;
   std::cout << generatedPerson.skills << std::endl;
   std::cout << "--------------------------------------------------------------------------------" << std::endl;
-  for( const savage::hindrance& h : generatedPerson.hindrances ) {
+  for( const savage::hindrance& h : generatedPerson.get_hindrances() ) {
     std::cout << h << std::endl;
   }
   std::cout << "--------------------------------------------------------------------------------" << std::endl;
-  for( const savage::edge& e : generatedPerson.edges ) {
+  for( const savage::edge& e : generatedPerson.get_edges() ) {
     std::cout << e << std::endl;
   }
 
@@ -169,26 +169,26 @@ void random_initialize( savage::person& p ) {
 
   if( hasMajorHindrance ) {
     hindrancePoints += 2;
-    p.hindrances.push_back( hindrance_manager::random_major_hindrance() );
+    p.add_hindrance( hindrance_manager::random_major_hindrance() );
   }
   if( numMinorHindrances > 0 ) {
     ++hindrancePoints;
     const hindrance* minorHindranceA = &hindrance_manager::random_minor_hindrance();
-    p.hindrances.push_back( *minorHindranceA );
+    p.add_hindrance( *minorHindranceA );
     if( numMinorHindrances > 1 ) {
       ++hindrancePoints;
       const hindrance* minorHindranceB;
       do {
         minorHindranceB = &hindrance_manager::random_minor_hindrance();
       } while( minorHindranceA == minorHindranceB );
-      p.hindrances.push_back( *minorHindranceB );
+      p.add_hindrance( *minorHindranceB );
     }
   }
 
   // Determine the number of points we have to spend on attributes.
   std::size_t attributePoints = 5;
   // Attribute points can be affected by hindrances.
-  apply_hindrances_modifier( p.hindrances, modifier_target_e::attriibute_points, attributePoints );
+  apply_hindrances_modifier( p.get_hindrances(), modifier_target_e::attriibute_points, attributePoints );
   // Randomly spend hindrance points on attributes.
   while( hindrancePoints >= 2 ) {
     if( ( rand() % 2 ) == 1 ) {
@@ -212,7 +212,7 @@ void random_initialize( savage::person& p ) {
     --attributePoints;
   }
   // Hindrances can modify the die types of attributes.
-  for( const hindrance& h : p.hindrances ) {
+  for( const hindrance& h : p.get_hindrances() ) {
     for( std::size_t i = static_cast<std::size_t>( modifier_target_e::attr_agility ),
          iLast = static_cast<std::size_t>( modifier_target_e::attr_vigour ); i <= iLast; ++i ) {
       const modifier* m = h.modifiers.get_modifier( static_cast<modifier_target_e>( i ) );
@@ -241,8 +241,8 @@ void random_initialize( savage::person& p ) {
   std::size_t skillPoints = 15;
   std::size_t smartsSkillPoints = 0;
   // Hindrances can affect skill points.
-  apply_hindrances_modifier( p.hindrances, modifier_target_e::skill_points, skillPoints );
-  apply_hindrances_modifier( p.hindrances, modifier_target_e::smarts_skill_points, smartsSkillPoints );
+  apply_hindrances_modifier( p.get_hindrances(), modifier_target_e::skill_points, skillPoints );
+  apply_hindrances_modifier( p.get_hindrances(), modifier_target_e::smarts_skill_points, smartsSkillPoints );
   // Randomly spend hindrance points on skill points.
   while( hindrancePoints >= 1 ) {
     if( ( rand() % 2 ) == 1 ) {
@@ -309,7 +309,7 @@ void random_initialize( savage::person& p ) {
       // If no edges are available, just stop looking for edges.
       break;
     }
-    p.edges.push_back( *e );
+    p.add_edge( *e );
     --edgePoints;
   }
 }
@@ -386,15 +386,8 @@ void random_level_up( savage::person& p, std::size_t targetLevel ) {
     int task = availableTasks[rand() % availableTasks.size()];
     switch( task ) {
     case 0: {
-      // Task 0: Choose an edge. If this edge replaces another edge, remove the old one.
-      if( !e->replacesEdge.empty() ) {
-        auto rplItr = std::find_if( p.edges.begin(), p.edges.end(), [e]( const edge& o ) {
-          return o.name == e->replacesEdge;
-        } );
-        p.replacedEdges.push_back( e->replacesEdge ); // Keep track of the edges that are replaced.
-        p.edges.erase( rplItr ); // No need to check if it was found as this edge wouldn't be available if it wasn't there.
-      }
-      p.edges.push_back( *e );
+      // Task 0: Choose an edge.
+      p.add_edge( *e );
       break;
     }
     case 1: {

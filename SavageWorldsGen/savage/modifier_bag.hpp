@@ -106,16 +106,16 @@ inline std::ostream& operator<<( std::ostream& o, const modifier& m ) {
 }
 
 class modifier_bag {
-  std::vector<modifier> modifiers;
+  std::vector<modifier> m_modifiers;
 
 public:
   modifier_bag()
-    : modifiers() {}
+    : m_modifiers() {}
 
-  void add_modifier( const modifier& m ) { modifiers.push_back( m ); }
+  void add_modifier( const modifier& m ) { m_modifiers.push_back( m ); }
 
   const modifier* get_modifier( modifier_target_e target, const std::string& subTarget = "" ) const {
-    for( const modifier& m : modifiers ) {
+    for( const modifier& m : m_modifiers ) {
       if( m.target == target && m.subTarget == subTarget ) {
         return &m;
       }
@@ -123,7 +123,7 @@ public:
     return nullptr;
   }
 
-  const std::vector<modifier>& as_vector() const { return modifiers; }
+  const std::vector<modifier>& as_vector() const { return m_modifiers; }
 };
 
 inline std::ostream& operator<<( std::ostream& o, const modifier_bag& b ) {
