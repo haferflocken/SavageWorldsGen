@@ -47,14 +47,13 @@ struct person {
   uint32_t level() const { return 1 + ( experience / 5 ); }
 
   rank_e rank() const {
-    const uint32_t l = level();
-    if( l >= 80 ) {
+    if( experience >= 80 ) {
       return rank_e::legendary;
-    } else if( l >= 60 ) {
+    } else if( experience >= 60 ) {
       return rank_e::heroic;
-    } else if( l >= 40 ) {
+    } else if( experience >= 40 ) {
       return rank_e::veteran;
-    } else if( l >= 20 ) {
+    } else if( experience >= 20 ) {
       return rank_e::seasoned;
     } else {
       return rank_e::novice;

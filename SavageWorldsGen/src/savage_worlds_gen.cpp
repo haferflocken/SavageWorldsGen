@@ -156,7 +156,7 @@ void apply_hindrances_modifier( const std::vector<savage::hindrance>& hindrances
     }
   }
 }
-} // namespace anonymous
+} // anonymous namespace
 
 void random_initialize( savage::person& p ) {
   using namespace savage;
