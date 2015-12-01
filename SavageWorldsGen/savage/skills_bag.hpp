@@ -27,14 +27,14 @@ struct skill {
  * The skills of a person in Savage Worlds.
  */
 class skills_bag {
-  std::vector<skill> skills;
+  std::vector<skill> m_skills;
 
 public:
   skills_bag()
-    : skills() {
+    : m_skills() {
     const std::vector<skill_definition>& skillDefs = skills_manager::get_skill_definitions();
     for( const skill_definition& s : skillDefs ) {
-      skills.push_back( skill( s ) );
+      m_skills.push_back( skill( s ) );
     }
   }
 
@@ -43,11 +43,11 @@ public:
     set_die( s, d );
   }
 
-  std::vector<skill>& as_vector() { return skills; }
-  const std::vector<skill>& as_vector() const { return skills; }
+  std::vector<skill>& as_vector() { return m_skills; }
+  const std::vector<skill>& as_vector() const { return m_skills; }
 
   dice_e find_die( const std::string& skillName ) const {
-    for( const skill& s : skills ) {
+    for( const skill& s : m_skills ) {
       if( s.def.name == skillName ) {
         return s.die;
       }
@@ -56,7 +56,7 @@ public:
   }
 
   void set_die( const std::string& skillName, dice_e die ) {
-    for( skill& s : skills ) {
+    for( skill& s : m_skills ) {
       if( s.def.name == skillName ) {
         s.die = die;
         return;
@@ -66,21 +66,21 @@ public:
 
   skills_bag operator+( const skills_bag& rhs ) const {
     skills_bag result;
-    for( std::size_t i = 0, iEnd = skills.size(); i < iEnd; ++i ) {
-      result.skills[i].die = std::max( skills[i].die, rhs.skills[i].die );
+    for( std::size_t i = 0, iEnd = m_skills.size(); i < iEnd; ++i ) {
+      result.m_skills[i].die = std::max( m_skills[i].die, rhs.m_skills[i].die );
     }
     return result;
   }
 
   bool operator>=( const skills_bag& rhs ) const {
-    if( skills.size() != rhs.skills.size() ) {
+    if( m_skills.size() != rhs.m_skills.size() ) {
       throw savage_error( "Skill list changed during character generation." );
     }
-    for( std::size_t i = 0, iEnd = skills.size(); i < iEnd; ++i ) {
-      if( skills[i].def.name != rhs.skills[i].def.name ) {
+    for( std::size_t i = 0, iEnd = m_skills.size(); i < iEnd; ++i ) {
+      if( m_skills[i].def.name != rhs.m_skills[i].def.name ) {
         throw savage_error( "Skill list changed during character generation." );
       }
-      if( skills[i].die < rhs.skills[i].die ) {
+      if( m_skills[i].die < rhs.m_skills[i].die ) {
         return false;
       }
     }
