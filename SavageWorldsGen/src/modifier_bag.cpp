@@ -235,7 +235,7 @@ bool parse_modifier( const std::string& modifierText, modifier& outModifier ) {
     break;
   }
   default:
-    throw std::runtime_error( "INVALID CODE BRANCH REACHED." );
+    throw savage_error( "INVALID CODE BRANCH REACHED." );
   }
 
   // Place the parsed values in the output parameter.

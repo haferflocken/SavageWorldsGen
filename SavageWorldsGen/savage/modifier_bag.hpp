@@ -161,6 +161,6 @@ inline modifier_bag parse_modifiers( const std::string& modifierText ) {
   if( parse_modifiers( modifierText, modifiers ) ) {
     return modifiers;
   }
-  throw std::runtime_error( "Failed to parse modifiers from: " + modifierText );
+  throw savage_error( "Failed to parse modifiers from: " + modifierText );
 }
 } // namespace savage

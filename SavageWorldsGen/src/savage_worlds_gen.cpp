@@ -344,7 +344,7 @@ bool can_raise_attribute( savage::person& p ) {
     }
     break;
   default:
-    throw std::runtime_error( "Invalid rank." );
+    throw savage_error( "Invalid rank." );
   }
   return false;
 }
@@ -436,12 +436,12 @@ void random_level_up( savage::person& p, std::size_t targetLevel ) {
         p.raisedAttributeFlags = p.raisedAttributeFlags | person::raised_attribute_flags_e::raised_as_legendary;
         break;
       default:
-        throw std::runtime_error( "Invalid rank." );
+        throw savage_error( "Invalid rank." );
       }
       break;
     }
     default:
-      throw std::runtime_error( "Invalid level up task." );
+      throw savage_error( "Invalid level up task." );
     }
 
     --numLevelUps;

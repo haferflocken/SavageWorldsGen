@@ -74,11 +74,11 @@ public:
 
   bool operator>=( const skills_bag& rhs ) const {
     if( skills.size() != rhs.skills.size() ) {
-      throw std::runtime_error( "Skill list changed during character generation." );
+      throw savage_error( "Skill list changed during character generation." );
     }
     for( std::size_t i = 0, iEnd = skills.size(); i < iEnd; ++i ) {
       if( skills[i].def.name != rhs.skills[i].def.name ) {
-        throw std::runtime_error( "Skill list changed during character generation." );
+        throw savage_error( "Skill list changed during character generation." );
       }
       if( skills[i].die < rhs.skills[i].die ) {
         return false;
