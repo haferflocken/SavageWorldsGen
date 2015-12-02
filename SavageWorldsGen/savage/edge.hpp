@@ -41,7 +41,7 @@ struct edge_requirements {
 /**
  * An edge a Savage Worlds character can have.
  */
-struct edge {
+struct edge : public modifier_bag_source {
   std::string name; // The name of this edge.
   rank_e requiredRank; // The rank a person must have to have this edge.
   std::string replacesEdge; // If not empty, this edge replaces replacesEdge when taken, which makes it a mandatory requirement.
@@ -91,6 +91,8 @@ struct edge {
     , requirementOptions( { req } )
     , modifiers( m )
     , additionalEffects( e ) {}
+
+  virtual const modifier_bag& get_modifiers() const override { return modifiers; }
 };
 
 inline std::ostream& operator<<( std::ostream& o, const edge& e ) {

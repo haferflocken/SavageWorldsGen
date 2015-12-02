@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dice_e.hpp"
+#include "modifier_bag.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -47,6 +48,10 @@ struct attributes_bag {
 
   dice_e* as_array() { return reinterpret_cast<dice_e*>( this ); }
   const dice_e* as_array() const { return reinterpret_cast<const dice_e*>( this ); }
+
+  dice_e& get( attributes_e a ) {
+    return as_array()[static_cast<std::size_t>( a )];
+  }
 
   dice_e get( attributes_e a ) const {
     return as_array()[static_cast<std::size_t>( a )];
@@ -106,4 +111,13 @@ inline std::ostream& operator<<( std::ostream& o, const attributes_bag& t ) {
   o << "Vigour: " << t.vigourDie;
   return o;
 }
+
+/**
+ * A modifier_bag_source for modifiers to attributes applied at character initialization or at level up.
+ */
+struct attribute_modifier_source : public modifier_bag_source {
+  modifier_bag modifiers;
+
+  virtual const modifier_bag& get_modifiers() const override { return modifiers; }
+};
 } // namespace savage

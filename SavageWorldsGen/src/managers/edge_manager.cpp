@@ -129,7 +129,7 @@ const std::vector<edge>& edge_manager::get_edges() {
   return *s_edges;
 }
 
-const edge* edge_manager::random_allowed_edge( const person& p ) {
+std::vector<const edge*> edge_manager::allowed_edges( const person& p ) {
   std::vector<const edge*> allowedEdges;
   for( const edge& e : get_edges() ) {
     if( p.meets_requirements( e ) && p.find_edge( e.name ) == nullptr && p.find_replaced_edge( e.name ) == nullptr ) {
@@ -138,6 +138,11 @@ const edge* edge_manager::random_allowed_edge( const person& p ) {
       allowedEdges.push_back( &e );
     }
   }
+  return allowedEdges;
+}
+
+const edge* edge_manager::random_allowed_edge( const person& p ) {
+  std::vector<const edge*> allowedEdges = allowed_edges( p );
   if( allowedEdges.empty() ) {
     return nullptr;
   }

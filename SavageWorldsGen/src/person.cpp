@@ -2,6 +2,49 @@
 
 using namespace savage;
 
+person::person( uint32_t level, const std::vector<modifier_bag_source*>& modifierStack )
+  : person() {
+  // TODO(jwerner)
+}
+
+bool person::meets_requirements( const edge& e ) const {
+  // Check that our rank is greater than or equal to the edge's required rank.
+  if( rank() < e.requiredRank ) {
+    return false;
+  }
+
+  // Check that we have the edge that this edge replaces, if any.
+  if( !e.replacesEdge.empty() && find_edge( e.replacesEdge ) == nullptr ) {
+    return false;
+  }
+
+  // We meet the requirements if we meet any of the requirement options, or if there are no requirements.
+  if( e.requirementOptions.empty() ) {
+    return true;
+  }
+  for( const edge_requirements& r : e.requirementOptions ) {
+    // Check if we have the required attributes.
+    if( !( m_attributes >= r.requiredAttributes ) ) {
+      continue;
+    }
+
+    // Check if we have the required skills.
+    if( !( m_skills >= r.requiredSkills ) ) {
+      continue;
+    }
+
+    // Check if we have the required edges.
+    if( !r.requiredEdge.empty() && find_edge( r.requiredEdge ) == nullptr ) {
+      continue;
+    }
+
+    // Return true if we meet the requirements.
+    return true;
+  }
+  // Return false when we meet no requirements.
+  return false;
+}
+
 namespace {
 void apply_action_die( dice_e& lhs, modifier_action_e action, modifier_unit_e unit, int32_t operand ) {
   switch( unit ) {
@@ -115,7 +158,7 @@ void person::apply_modifier( const modifier& m ) {
   case modifier_target_e::attr_strength:
   case modifier_target_e::attr_vigour: {
     const std::size_t attributeIndex = static_cast<std::size_t>( m.target ) - static_cast<std::size_t>( modifier_target_e::attr_agility );
-    dice_e& attributeDie = attributes.as_array()[attributeIndex];
+    dice_e& attributeDie = m_attributes.as_array()[attributeIndex];
     apply_action_die( attributeDie, m.action, m.operandUnit, m.operand );
     break;
   }
@@ -166,7 +209,7 @@ void person::unapply_modifier( const modifier& m ) {
   case modifier_target_e::attr_strength:
   case modifier_target_e::attr_vigour: {
     const std::size_t attributeIndex = static_cast<std::size_t>( m.target ) - static_cast<std::size_t>( modifier_target_e::attr_agility );
-    dice_e& attributeDie = attributes.as_array()[attributeIndex];
+    dice_e& attributeDie = m_attributes.as_array()[attributeIndex];
     unapply_action_die( attributeDie, m.action, m.operandUnit, m.operand );
     break;
   }

@@ -51,6 +51,12 @@
     <ClInclude Include="savage\savage_exception.hpp">
       <Filter>savage</Filter>
     </ClInclude>
+    <ClInclude Include="savage\level_one_generator.hpp">
+      <Filter>savage</Filter>
+    </ClInclude>
+    <ClInclude Include="savage\level_up_generator.hpp">
+      <Filter>savage</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\savage_worlds_gen.cpp">
@@ -69,6 +75,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\person.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\level_one_generator.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

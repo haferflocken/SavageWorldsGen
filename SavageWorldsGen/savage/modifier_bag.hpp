@@ -163,4 +163,14 @@ inline modifier_bag parse_modifiers( const std::string& modifierText ) {
   }
   throw savage_error( "Failed to parse modifiers from: " + modifierText );
 }
+
+/**
+* A source of a modifier bag.
+*/
+class modifier_bag_source {
+public:
+  virtual ~modifier_bag_source() {}
+
+  virtual const modifier_bag& get_modifiers() const = 0;
+};
 } // namespace savage

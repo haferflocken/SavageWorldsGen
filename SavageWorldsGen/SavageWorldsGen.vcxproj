@@ -65,6 +65,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="savage\hindrance.hpp" />
+    <ClInclude Include="savage\level_one_generator.hpp" />
+    <ClInclude Include="savage\level_up_generator.hpp" />
     <ClInclude Include="savage\managers\edge_manager.hpp" />
     <ClInclude Include="savage\managers\hindrance_manager.hpp" />
     <ClInclude Include="savage\managers\skills_manager.hpp" />
@@ -79,6 +81,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="savage\managers\hindrance_manager.cpp" />
+    <ClCompile Include="src\level_one_generator.cpp" />
     <ClCompile Include="src\managers\edge_manager.cpp" />
     <ClCompile Include="src\managers\skills_manager.cpp" />
     <ClCompile Include="src\modifier_bag.cpp" />

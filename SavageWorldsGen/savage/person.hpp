@@ -13,19 +13,38 @@
 #include <memory>
 
 namespace savage {
+// Forward declarations.
+class level_one_generator;
+class level_up_generator;
+
 /**
  * A person in Savage Worlds.
  */
-struct person {
-  std::string name;
-  uint32_t experience;
-  attributes_bag attributes;
-  skills_bag skills;
+class person {
+  friend class level_one_generator;
+  friend class level_up_generator;
 
+public:
+  enum class raised_attribute_flags_e : uint8_t {
+    none = 0,
+    raised_as_novice = 1,
+    raised_as_seasoned = 2,
+    raised_as_veteran = 4,
+    raised_as_heroic = 8,
+    raised_as_legendary = 16
+  };
+  
 private:
+  uint32_t m_level;
+  attributes_bag m_attributes;
+  skills_bag m_skills;
+
   std::vector<edge> m_edges;
   std::vector<std::string> m_replacedEdges;
   std::vector<hindrance> m_hindrances;
+
+  // The modifiers that have been applied to this person, in the order they were applied.
+  std::vector<modifier_bag_source*> m_modifierStack;
 
   // Derived statistics.
   int8_t m_toughness;
@@ -38,43 +57,48 @@ private:
   int8_t m_fearChecks;
   int8_t m_bennies;
 
-public:
-  enum class raised_attribute_flags_e : uint8_t {
-    none = 0,
-    raised_as_novice = 1,
-    raised_as_seasoned = 2,
-    raised_as_veteran = 4,
-    raised_as_heroic = 8,
-    raised_as_legendary = 16
-  };
-  raised_attribute_flags_e raisedAttributeFlags;
+  raised_attribute_flags_e m_raisedAttributeFlags;
 
+public:
+  /**
+   * Default constructor, which makes a level 0 character.
+   */
   person()
-    : name()
-    , experience( 0 )
-    , attributes()
-    , skills()
+    : m_level( 0 )
+    , m_attributes()
+    , m_skills()
     , m_edges()
     , m_replacedEdges()
     , m_hindrances()
+    , m_modifierStack()
     , m_pace( 6 )
     , m_runDie( dice_e::d6 )
     , m_parryModifier( 0 )
     , m_dodge( 0 )
     , m_charisma( 0 )
     , m_bennies( 3 )
-    , raisedAttributeFlags( raised_attribute_flags_e::none ) {}
+    , m_raisedAttributeFlags( raised_attribute_flags_e::none ) {}
 
-  uint32_t level() const { return 1 + ( experience / 5 ); }
+  /**
+   * Initialize a character of the given level with a modifier stack. This constructor will
+   * read the given stack and appropriately determine the edges and hindrances in it.
+   */
+  person( uint32_t level, const std::vector<modifier_bag_source*>& modifierStack );
+
+  uint32_t get_level() const { return m_level; }
+  const attributes_bag& get_attributes() const { return m_attributes; }
+  const skills_bag& get_skills() const { return m_skills; }
+  const std::vector<edge>& get_edges() const { return m_edges; }
+  const std::vector<hindrance>& get_hindrances() const { return m_hindrances; }
 
   rank_e rank() const {
-    if( experience >= 80 ) {
+    if( m_level >= 16 ) {
       return rank_e::legendary;
-    } else if( experience >= 60 ) {
+    } else if( m_level >= 12 ) {
       return rank_e::heroic;
-    } else if( experience >= 40 ) {
+    } else if( m_level >= 8 ) {
       return rank_e::veteran;
-    } else if( experience >= 20 ) {
+    } else if( m_level >= 4 ) {
       return rank_e::seasoned;
     } else {
       return rank_e::novice;
@@ -82,12 +106,9 @@ public:
   }
 
   uint8_t parry() const {
-    const dice_e fightingSkill = skills.find_die( "Fighting" );
+    const dice_e fightingSkill = m_skills.find_die( "Fighting" );
     return ( as_numeric( fightingSkill ) / 2 ) + m_parryModifier;
   }
-
-  const std::vector<edge>& get_edges() const { return m_edges; }
-  const std::vector<hindrance>& get_hindrances() const { return m_hindrances; }
 
   const edge* find_edge( const std::string& edgeName ) const {
     for( const edge& e : m_edges ) {
@@ -107,52 +128,15 @@ public:
     return nullptr;
   }
 
-  bool meets_requirements( const edge& e ) const {
-    // Check that our rank is greater than or equal to the edge's required rank.
-    if( rank() < e.requiredRank ) {
-      return false;
-    }
-
-    // Check that we have the edge that this edge replaces, if any.
-    if( !e.replacesEdge.empty() && find_edge( e.replacesEdge ) == nullptr ) {
-      return false;
-    }
-
-    // We meet the requirements if we meet any of the requirement options, or if there are no requirements.
-    if( e.requirementOptions.empty() ) {
-      return true;
-    }
-    for( const edge_requirements& r : e.requirementOptions ) {
-      // Check if we have the required attributes.
-      if( !( attributes >= r.requiredAttributes ) ) {
-        continue;
-      }
-
-      // Check if we have the required skills.
-      if( !( skills >= r.requiredSkills ) ) {
-        continue;
-      }
-      
-      // Check if we have the required edges.
-      if( !r.requiredEdge.empty() && find_edge( r.requiredEdge ) == nullptr ) {
-        continue;
-      }
-
-      // Return true if we meet the requirements.
-      return true;
-    }
-    // Return false when we meet no requirements.
-    return false;
-  }
-
   /**
-   * Add an edge to the edge list and apply its modifiers.
+   * Checks if a person meets the requirements for an edge.
    */
+  bool meets_requirements( const edge& e ) const;
+
+  // Add an edge to the edge list and apply its modifiers.
   void add_edge( const edge& e );
 
-  /**
-   * Add a hindrance to the hindrance list and apply its modifiers.
-   */
+  // Add a hindrance to the hindrance list and apply its modifiers.
   void add_hindrance( const hindrance& h );
 
 private:

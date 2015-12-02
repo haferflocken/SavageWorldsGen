@@ -16,7 +16,7 @@ enum class hindrance_severity_e {
 /**
  * A hindrance of a person in Savage Worlds.
  */
-struct hindrance {
+struct hindrance : public modifier_bag_source {
   std::string name; // The name of this hindrance.
   hindrance_severity_e severity; // The severity of the hindrance.
   modifier_bag modifiers; // The modifiers this hindrance applies.
@@ -39,6 +39,8 @@ struct hindrance {
     , severity( s )
     , modifiers( m )
     , additionalEffects( e ) {}
+
+  virtual const modifier_bag& get_modifiers() const override { return modifiers; }
 };
 
 inline std::ostream& operator<<( std::ostream& o, const hindrance& h ) {

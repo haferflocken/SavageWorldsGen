@@ -18,8 +18,8 @@ public:
   static const std::vector<hindrance>& get_major_hindrances();
   static const std::vector<hindrance>& get_minor_hindrances();
 
-  static const hindrance& random_major_hindrance();
-  static const hindrance& random_minor_hindrance();
+  static const hindrance* random_major_hindrance();
+  static const hindrance* random_minor_hindrance();
 
   static const hindrance* find_hindrance( const std::string& name );
 

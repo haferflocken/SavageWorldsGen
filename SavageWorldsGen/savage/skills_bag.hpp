@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dice_e.hpp"
+#include "attributes_bag.hpp"
 #include "managers/skills_manager.hpp"
 
 #include <string>
@@ -101,9 +102,19 @@ inline std::ostream& operator<<( std::ostream& o, const skills_bag& bag ) {
   return o;
 }
 
-inline std::vector<skill*> only_skills_below( const std::vector<skill*>& skills, dice_e threshold ) {
-  std::vector<skill*> result;
-  for( skill* s : skills ) {
+inline void split_skills_by_attribute_dice( const skills_bag& skills, const attributes_bag& attributes, std::vector<const skill*>& outBelowAttributes, std::vector<const skill*>& outRemainingSkills ) {
+  for( const skill& s : skills.as_vector() ) {
+    if( s.die < attributes.get( s.def.attribute ) ) {
+      outBelowAttributes.push_back( &s );
+    } else {
+      outRemainingSkills.push_back( &s );
+    }
+  }
+}
+
+inline std::vector<const skill*> only_skills_below( const std::vector<const skill*>& skills, dice_e threshold ) {
+  std::vector<const skill*> result;
+  for( const skill* s : skills ) {
     if( s->die < threshold ) {
       result.push_back( s );
     }
@@ -121,21 +132,11 @@ inline std::vector<skill*> only_skills_below( std::vector<skill>& skills, dice_e
   return result;
 }
 
-inline std::vector<skill*> only_skills_of_attribute( const std::vector<skill*>& skills, attributes_e attribute ) {
-  std::vector<skill*> result;
-  for( skill* s : skills ) {
+inline std::vector<const skill*> only_skills_of_attribute( const std::vector<const skill*>& skills, attributes_e attribute ) {
+  std::vector<const skill*> result;
+  for( const skill* s : skills ) {
     if( s->def.attribute == attribute ) {
       result.push_back( s );
-    }
-  }
-  return result;
-}
-
-inline std::vector<skill*> only_skills_of_attribute( std::vector<skill>& skills, attributes_e attribute ) {
-  std::vector<skill*> result;
-  for( skill& s : skills ) {
-    if( s.def.attribute == attribute ) {
-      result.push_back( &s );
     }
   }
   return result;

@@ -1,4 +1,4 @@
-#include "../savage/person.hpp"
+#include "../savage/level_one_generator.hpp"
 
 #include "../savage/managers/edge_manager.hpp"
 #include "../savage/managers/hindrance_manager.hpp"
@@ -52,7 +52,6 @@ void handle_mount_world_arg( const std::vector<std::string>& argGroup ) {
   }
 }
 
-void random_initialize( savage::person& p );
 void random_level_up( savage::person& p, std::size_t targetLevel );
 
 int main( int argCount, char** args ) {
@@ -100,24 +99,24 @@ int main( int argCount, char** args ) {
     }
   }
 
-  // Generate the character.
+  // Generate the level 1 character.
   srand( static_cast<unsigned int>( time( nullptr ) ) );
-  savage::person generatedPerson;
-  generatedPerson.name = nameArg;
-  random_initialize( generatedPerson );
-  random_level_up( generatedPerson, levelArg );
+  
+  savage::level_one_generator levelOneGenerator;
+  levelOneGenerator.generate_next();
+  const savage::person& generatedPerson = levelOneGenerator.get_current();
 
   // Output the generated character.
   std::cout << std::endl;
   std::cout << "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV" << std::endl;
   std::cout << std::endl;
 
-  std::cout << generatedPerson.name << " [Level " << generatedPerson.level() << "] ";
+  std::cout << nameArg << " [Level " << generatedPerson.get_level() << "] ";
   std::cout << "[" << generatedPerson.rank() << "]" << std::endl;
   std::cout << "--------------------------------------------------------------------------------" << std::endl;
-  std::cout << generatedPerson.attributes << std::endl;
+  std::cout << generatedPerson.get_attributes() << std::endl;
   std::cout << "--------------------------------------------------------------------------------" << std::endl;
-  std::cout << generatedPerson.skills << std::endl;
+  std::cout << generatedPerson.get_skills() << std::endl;
   std::cout << "--------------------------------------------------------------------------------" << std::endl;
   for( const savage::hindrance& h : generatedPerson.get_hindrances() ) {
     std::cout << h << std::endl;
@@ -157,163 +156,7 @@ void apply_hindrances_modifier( const std::vector<savage::hindrance>& hindrances
   }
 }
 } // anonymous namespace
-
-void random_initialize( savage::person& p ) {
-  using namespace savage;
-  
-  // Randomize hindrances. A person can have two minor and a major at most.
-  // A major hindrance grants 2 hindrance points, and a minor hindrance grants 1.
-  bool hasMajorHindrance = ( rand() % 2 ) == 1;
-  int numMinorHindrances = rand() % 3;
-  std::size_t hindrancePoints = 0;
-
-  if( hasMajorHindrance ) {
-    hindrancePoints += 2;
-    p.add_hindrance( hindrance_manager::random_major_hindrance() );
-  }
-  if( numMinorHindrances > 0 ) {
-    ++hindrancePoints;
-    const hindrance* minorHindranceA = &hindrance_manager::random_minor_hindrance();
-    p.add_hindrance( *minorHindranceA );
-    if( numMinorHindrances > 1 ) {
-      ++hindrancePoints;
-      const hindrance* minorHindranceB;
-      do {
-        minorHindranceB = &hindrance_manager::random_minor_hindrance();
-      } while( minorHindranceA == minorHindranceB );
-      p.add_hindrance( *minorHindranceB );
-    }
-  }
-
-  // Determine the number of points we have to spend on attributes.
-  std::size_t attributePoints = 5;
-  // Attribute points can be affected by hindrances.
-  apply_hindrances_modifier( p.get_hindrances(), modifier_target_e::attriibute_points, attributePoints );
-  // Randomly spend hindrance points on attributes.
-  while( hindrancePoints >= 2 ) {
-    if( ( rand() % 2 ) == 1 ) {
-      hindrancePoints -= 2;
-      ++attributePoints;
-    } else {
-      break;
-    }
-  }
-  // Spend attribute points randomly.
-  while( attributePoints > 0 ) {
-    // Treat the attributes bag as an array of dice to make it easy to work with.
-    dice_e* attributeArray = p.attributes.as_array();
-
-    // Find an attribute that can be increased.
-    std::vector<attributes_e> increasableAttributes = p.attributes.get_attributes_below( dice_e::d12 );
-    std::size_t attributeIndex = static_cast<std::size_t>( increasableAttributes[rand() % increasableAttributes.size()] );
-
-    // Increase the attribute by one die type.
-    attributeArray[attributeIndex] = attributeArray[attributeIndex] + 1;
-    --attributePoints;
-  }
-  // Hindrances can modify the die types of attributes.
-  for( const hindrance& h : p.get_hindrances() ) {
-    for( std::size_t i = static_cast<std::size_t>( modifier_target_e::attr_agility ),
-         iLast = static_cast<std::size_t>( modifier_target_e::attr_vigour ); i <= iLast; ++i ) {
-      const modifier* m = h.modifiers.get_modifier( static_cast<modifier_target_e>( i ) );
-      if( m != nullptr ) {
-        if( m->operandUnit == modifier_unit_e::die_type ) {
-          dice_e& die = p.attributes.as_array()[i - static_cast<std::size_t>( modifier_target_e::attr_agility )];
-          // Add or subtract the operand, because the type-checker in the modifier parser has verified that is the action.
-          switch( m->action ) {
-          case modifier_action_e::add:
-            if( die < dice_e::d12 ) {
-              die = die + m->operand;
-            }
-            break;
-          case modifier_action_e::subtract:
-            if( die > dice_e::d4 ) {
-              die = die - m->operand;
-            }
-            break;
-          }
-        }
-      }
-    }
-}
-
-  // Determine the number of points we have to spend on skills.
-  std::size_t skillPoints = 15;
-  std::size_t smartsSkillPoints = 0;
-  // Hindrances can affect skill points.
-  apply_hindrances_modifier( p.get_hindrances(), modifier_target_e::skill_points, skillPoints );
-  apply_hindrances_modifier( p.get_hindrances(), modifier_target_e::smarts_skill_points, smartsSkillPoints );
-  // Randomly spend hindrance points on skill points.
-  while( hindrancePoints >= 1 ) {
-    if( ( rand() % 2 ) == 1 ) {
-      --hindrancePoints;
-      ++skillPoints;
-    } else {
-      break;
-    }
-  }
-  if( ( hindrancePoints % 2 ) == 1 ) {
-    // Make sure the hindrance points are even before reaching the edges, as edges consume two.
-    --hindrancePoints;
-    ++skillPoints;
-  }
-  // Spend skill points specific to smarts randomly on smarts skills.
-  while( smartsSkillPoints > 0 ) {
-    // Find a smarts skill that can be increased.
-    std::vector<skill*> smartsSkillsBelowD12 = only_skills_below(
-      only_skills_of_attribute( p.skills.as_vector(), attributes_e::smarts ), dice_e::d12 );
-
-    skill* s;
-    if( smartsSkillPoints >= 2 ) {
-      s = smartsSkillsBelowD12[rand() % smartsSkillsBelowD12.size()];
-    } else {
-      std::vector<skill*> skillsBelowSmarts = only_skills_below( smartsSkillsBelowD12, p.attributes.get( attributes_e::smarts ) );
-      s = skillsBelowSmarts[rand() % skillsBelowSmarts.size()];
-    }
-    const std::size_t costToIncrease = ( s->die >= p.attributes.get( attributes_e::smarts ) ) ? 2 : 1;
-
-    // Increase the skill by one die type.
-    s->die = s->die + 1;
-    smartsSkillPoints -= costToIncrease;
-  }
-  // Spend skill points randomly.
-  while( skillPoints > 0 ) {
-    // Find a skill that can be increased.
-    std::vector<skill*> skillsBelowD12 = only_skills_below( p.skills.as_vector(), dice_e::d12 );
-    
-    skill* s;
-    if( skillPoints >= 2 ) {
-      s = skillsBelowD12[rand() % skillsBelowD12.size()];
-    } else {
-      std::vector<skill*> skillsBelowAttribute;
-      for( skill* sp : skillsBelowD12 ) {
-        if( sp->die < p.attributes.get( sp->def.attribute ) ) {
-          skillsBelowAttribute.push_back( sp );
-        }
-      }
-      s = skillsBelowAttribute[rand() % skillsBelowAttribute.size()];
-    }
-    const std::size_t costToIncrease = ( s->die >= p.attributes.get( s->def.attribute ) ) ? 2 : 1;
-    
-    // Increase the skill by one die type.
-    s->die = s->die + 1;
-    skillPoints -= costToIncrease;
-  }
-
-  // Randomize edges and spend remaining hindrance points.
-  std::size_t edgePoints = 1 + hindrancePoints / 2; // Includes the free edge for being a human.
-  while( edgePoints > 0 ) {
-    // Take a random edge whose requirements we meet.
-    const edge* e = edge_manager::random_allowed_edge( p );
-    if( e == nullptr ) {
-      // If no edges are available, just stop looking for edges.
-      break;
-    }
-    p.add_edge( *e );
-    --edgePoints;
-  }
-}
-
+/*
 bool can_raise_attribute( savage::person& p ) {
   using namespace savage;
 
@@ -447,3 +290,4 @@ void random_level_up( savage::person& p, std::size_t targetLevel ) {
     --numLevelUps;
   }
 }
+*/

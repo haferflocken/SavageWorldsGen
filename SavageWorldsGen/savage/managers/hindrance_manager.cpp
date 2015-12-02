@@ -94,14 +94,22 @@ const std::vector<hindrance>& hindrance_manager::get_minor_hindrances() {
   return *s_minorHindrances;
 }
 
-const hindrance& hindrance_manager::random_major_hindrance() {
-  std::size_t i = rand() % get_major_hindrances().size();
-  return get_major_hindrances()[i];
+const hindrance* hindrance_manager::random_major_hindrance() {
+  const std::vector<hindrance>& majorHindrances = get_major_hindrances();
+  if( majorHindrances.empty() ) {
+    return nullptr;
+  }
+  std::size_t i = rand() % majorHindrances.size();
+  return &majorHindrances[i];
 }
 
-const hindrance& hindrance_manager::random_minor_hindrance() {
-  std::size_t i = rand() % get_minor_hindrances().size();
-  return get_minor_hindrances()[i];
+const hindrance* hindrance_manager::random_minor_hindrance() {
+  const std::vector<hindrance>& minorHindrances = get_minor_hindrances();
+  if( minorHindrances.empty() ) {
+    return nullptr;
+  }
+  std::size_t i = rand() % minorHindrances.size();
+  return &minorHindrances[i];
 }
 
 const hindrance* hindrance_manager::find_hindrance( const std::string& name ) {
