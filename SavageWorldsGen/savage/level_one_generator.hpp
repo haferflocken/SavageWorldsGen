@@ -17,7 +17,7 @@ class level_one_generator {
     uint8_t smartsSkillPointsRemaining;
     uint8_t edgePointsRemaining;
 
-    modifier_bag_source* appliedModifier;
+    const modifier_bag_source* appliedModifier;
     person generatedPerson;
 
     gen_state* prevState;

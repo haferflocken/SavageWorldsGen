@@ -34,6 +34,7 @@ void level_one_generator::gen_state::generate_next_states() {
       gen_state* next = add_empty_next_state();
       --next->majorHindranceToTake;
       next->hindrancePointsRemaining += 2;
+      next->appliedModifier = &majorHindrance;
       next->generatedPerson.add_hindrance( majorHindrance );
     }
   }
@@ -44,6 +45,7 @@ void level_one_generator::gen_state::generate_next_states() {
       gen_state* next = add_empty_next_state();
       --next->minorHindrancesToTake;
       ++next->hindrancePointsRemaining;
+      next->appliedModifier = &minorHindrance;
       next->generatedPerson.add_hindrance( minorHindrance );
     }
   }
@@ -127,6 +129,7 @@ void level_one_generator::gen_state::generate_next_states() {
     for( const edge* e : edge_manager::allowed_edges( generatedPerson ) ) {
       gen_state* next = add_empty_next_state();
       --next->edgePointsRemaining;
+      next->appliedModifier = e;
       next->generatedPerson.add_edge( *e );
     }
   }
