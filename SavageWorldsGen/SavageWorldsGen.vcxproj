@@ -81,6 +81,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="savage\managers\hindrance_manager.cpp" />
+    <ClCompile Include="src\attributes_bag.cpp" />
     <ClCompile Include="src\level_one_generator.cpp" />
     <ClCompile Include="src\managers\edge_manager.cpp" />
     <ClCompile Include="src\managers\skills_manager.cpp" />

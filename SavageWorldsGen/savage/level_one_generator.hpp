@@ -33,7 +33,7 @@ class level_one_generator {
       , smartsSkillPointsRemaining( 0 )
       , edgePointsRemaining( 0 )
       , appliedModifier( nullptr )
-      , generatedPerson()
+      , generatedPerson( 1 )
       , prevState( nullptr )
       , nextStates()
       , nextStatesGenerated( false ) {}

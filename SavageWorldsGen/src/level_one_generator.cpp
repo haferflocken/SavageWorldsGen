@@ -4,6 +4,8 @@
 #include "../savage/managers/hindrance_manager.hpp"
 #include "../savage/managers/skills_manager.hpp"
 
+#include "../savage/savage_exception.hpp"
+
 #include <vector>
 
 using namespace savage;
@@ -74,7 +76,8 @@ void level_one_generator::gen_state::generate_next_states() {
     for( attributes_e attribute : attributesBelowD12 ) {
       gen_state* next = add_empty_next_state();
       --next->attributePointsRemaining;
-      // TODO(jwerner) attribute increase modifiers
+      next->appliedModifier = get_inc_attribute( attribute );
+      next->generatedPerson.add_general_modifier( get_inc_attribute( attribute ) );
     }
   }
 
@@ -200,9 +203,15 @@ bool level_one_generator::has_next() const {
 }
 
 void level_one_generator::generate_next() {
+  if( m_frontier.empty() ) {
+    throw savage_error( "LEVEL_ONE_GENERATOR::GENERATE_NEXT WAS CALLED WHEN THERE WAS NO NEXT PERSON." );
+  }
+
+  // Begin with a random node on the frontier.
+  std::size_t nextFrontierIndex = rand() % m_frontier.size();
+
   while( !m_frontier.empty() ) {
-    // Randomly choose a node on the frontier to progress with, removing it from the frontier in the process.
-    std::size_t nextFrontierIndex = rand() % m_frontier.size();
+    // Remove the chosen node from the frontier.
     std::vector<gen_state*>::iterator nextFrontierItr = m_frontier.begin() + nextFrontierIndex;
     gen_state* node = *nextFrontierItr;
     m_frontier.erase( nextFrontierItr );
@@ -214,7 +223,7 @@ void level_one_generator::generate_next() {
     if( node->nextStates.empty() ) {
       // Generate a person using this path in the generation tree.
       // First, build the modifier stack in reverse order by traversing up the tree.
-      std::vector<modifier_bag_source*> modifiers;
+      /*std::vector<const modifier_bag_source*> modifiers;
       for( gen_state* i = node; i != nullptr; i = i->prevState ) {
         if( i->appliedModifier != nullptr ) {
           modifiers.push_back( i->appliedModifier );
@@ -222,10 +231,10 @@ void level_one_generator::generate_next() {
       }
 
       // Reverse the stack so it is in the correct order.
-      std::reverse( modifiers.begin(), modifiers.end() );
+      std::reverse( modifiers.begin(), modifiers.end() );*/
       
       // Set m_current to a level 1 person with the generated modifier stack.
-      m_current = person( 1, modifiers );
+      m_current = node->generatedPerson;
 
       // After generating the person, remove this node from its parent's list of children, and prune as far
       // upwards as possible.
@@ -234,10 +243,12 @@ void level_one_generator::generate_next() {
       }
       return;
     } else {
-      // Add the next states to the frontier.
+      // Add the next states to the frontier, and randomly choose one of the new states to progress with.
+      // This means we have a randomized traversal of the generation tree which is similar to depth-first.
       for( gen_state& s : node->nextStates ) {
         m_frontier.push_back( &s );
       }
+      nextFrontierIndex = m_frontier.size() - ( rand() % node->nextStates.size() ) - 1;
     }
   }
 }

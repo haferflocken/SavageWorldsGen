@@ -44,7 +44,7 @@ private:
   std::vector<hindrance> m_hindrances;
 
   // The modifiers that have been applied to this person, in the order they were applied.
-  std::vector<modifier_bag_source*> m_modifierStack;
+  std::vector<const modifier_bag_source*> m_modifierStack;
 
   // Derived statistics.
   int8_t m_toughness;
@@ -63,8 +63,8 @@ public:
   /**
    * Default constructor, which makes a level 0 character.
    */
-  person()
-    : m_level( 0 )
+  person( uint32_t level = 0 )
+    : m_level( level )
     , m_attributes()
     , m_skills()
     , m_edges()
@@ -83,7 +83,7 @@ public:
    * Initialize a character of the given level with a modifier stack. This constructor will
    * read the given stack and appropriately determine the edges and hindrances in it.
    */
-  person( uint32_t level, const std::vector<modifier_bag_source*>& modifierStack );
+  person( uint32_t level, const std::vector<const modifier_bag_source*>& modifierStack );
 
   uint32_t get_level() const { return m_level; }
   const attributes_bag& get_attributes() const { return m_attributes; }
@@ -109,6 +109,8 @@ public:
     const dice_e fightingSkill = m_skills.find_die( "Fighting" );
     return ( as_numeric( fightingSkill ) / 2 ) + m_parryModifier;
   }
+
+  void set_level( uint32_t level ) { m_level = level; }
 
   const edge* find_edge( const std::string& edgeName ) const {
     for( const edge& e : m_edges ) {
@@ -138,6 +140,9 @@ public:
 
   // Add a hindrance to the hindrance list and apply its modifiers.
   void add_hindrance( const hindrance& h );
+
+  // Apply a general modifier bag.
+  void add_general_modifier( const modifier_bag_source* source );
 
 private:
   // Apply a modifier to this person.

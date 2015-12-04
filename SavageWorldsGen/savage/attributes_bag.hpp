@@ -118,6 +118,15 @@ inline std::ostream& operator<<( std::ostream& o, const attributes_bag& t ) {
 struct attribute_modifier_source : public modifier_bag_source {
   modifier_bag modifiers;
 
+  attribute_modifier_source( const modifier_bag& m )
+    : modifiers( m ) {}
+
   virtual const modifier_bag& get_modifiers() const override { return modifiers; }
 };
+
+/**
+ * Get a modifier source which increases the given attribute by one die type. The pointer is guaranteed
+ * to be valid for the duration of the program.
+ */
+const attribute_modifier_source* get_inc_attribute( attributes_e attribute );
 } // namespace savage

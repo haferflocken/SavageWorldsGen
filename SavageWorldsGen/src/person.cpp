@@ -2,8 +2,9 @@
 
 using namespace savage;
 
-person::person( uint32_t level, const std::vector<modifier_bag_source*>& modifierStack )
+person::person( uint32_t level, const std::vector<const modifier_bag_source*>& modifierStack )
   : person() {
+  m_level = level;
   // TODO(jwerner)
 }
 
@@ -276,6 +277,7 @@ void person::add_edge( const edge& e ) {
 
   // Add the new edge and apply its modifiers.
   m_edges.push_back( e );
+  m_modifierStack.push_back( &e );
   for( const modifier& m : e.modifiers.as_vector() ) {
     apply_modifier( m );
   }
@@ -284,7 +286,16 @@ void person::add_edge( const edge& e ) {
 void person::add_hindrance( const hindrance& h ) {
   // Add the hindrance to the hindrance list and apply its modifiers.
   m_hindrances.push_back( h );
+  m_modifierStack.push_back( &h );
   for( const modifier& m : h.modifiers.as_vector() ) {
+    apply_modifier( m );
+  }
+}
+
+void person::add_general_modifier( const modifier_bag_source* source ) {
+  // Apply the modifiers and place it on the stack.
+  m_modifierStack.push_back( source );
+  for( const modifier& m : source->get_modifiers().as_vector() ) {
     apply_modifier( m );
   }
 }
